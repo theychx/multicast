@@ -31,7 +31,7 @@ class MulticastCastError(MulticastError):
 
 class Playlist:
     def __init__(self, channel_url):
-        self._ydl = youtube_dl.YoutubeDL({"quiet": True, "no_warnings": True})
+        self._ydl = youtube_dl.YoutubeDL({'quiet': True, 'no_warnings': True})
         self._preinfo = None
         self._info = None
         self.next_entry = None
