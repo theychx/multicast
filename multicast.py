@@ -8,7 +8,7 @@ import youtube_dl
 
 
 # Put the names of your chromcasts into this list.
-CHROMECAST_NAMES = ['audio', 'video']
+CHROMECAST_NAMES = ['audi', 'video']
 # Insert YouTube channel/user url here.
 CHANNEL_URL = 'https://www.youtube.com/user/CrazyFrogVEVO/videos'
 
@@ -127,7 +127,7 @@ def main():
             raise ValueError
     except (pychromecast.error.ChromecastConnectionError, ValueError):
         raise MulticastCastError
-    
+
     playlist = Playlist(CHANNEL_URL)
 
     print('Press Ctrl+C to stop all casting and terminate script.')
@@ -157,8 +157,8 @@ if __name__ == '__main__':
     try:
         main()
     except MulticastPlaylistError:
-        sys.exit('Invalid YouTube channel/user url.')
+        sys.exit('Error: Invalid YouTube channel/user url.')
     except MulticastNoDevicesError:
-        sys.exit('No suitable Chromecast devices found.')
+        sys.exit('Error: No Chromecast devices found.')
     except MulticastCastError:
-        sys.exit('Invalid Chromecast list.')
+        sys.exit('Error: Invalid Chromecast list.')
