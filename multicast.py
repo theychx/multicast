@@ -78,8 +78,8 @@ class StatusListener:
     def new_media_status(self, status):
         if self.active.is_set():
             if status.player_state in ['UNKNOWN', 'IDLE']:
-                PlaybackHub.available.set()
                 self.active.clear()
+                PlaybackHub.available.set()
         elif self.ready.is_set():
             if status.player_state in ['BUFFERING', 'PLAYING']:
                 self.active.set()
@@ -120,17 +120,18 @@ def main():
              for cc in devices if cc.name in CHROMECAST_NAMES]
     playlist = Playlist(CHANNEL_URL)
 
+    print('Press Ctrl+C to stop all casting and terminate script.')
+
     while True:
         try:
             playlist.update()
             available_casts = [cc for cc in casts if not cc.is_active]
-            playing_videos = [cc.video_id
-                              for cc in casts if cc not in available_casts]
+            playing_videos = [cc.video_id for cc in casts if cc.is_active]
 
             for cast in available_casts:
                 video_url, video_id = next(entry for entry in playlist.next_entry
                                            if entry[1] not in playing_videos)
-                print("Playing %s on \"%s\"" % (video_id, cast.name))
+                print('Playing %s on "%s"' % (video_id, cast.name))
                 cast.play(video_url, video_id)
 
             if all(cc.is_active for cc in casts):
