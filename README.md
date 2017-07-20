@@ -6,5 +6,5 @@ to multiple Chromecasts.
 ```
 sudo apt-get update
 sudo apt-get install python3-dev
-sudo pip install PyChromecast youtube-dl
+sudo pip3 install PyChromecast youtube-dl
 ```
