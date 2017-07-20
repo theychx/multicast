@@ -8,7 +8,7 @@ import youtube_dl
 
 
 # Put the names of your chromcasts into this list.
-CHROMECAST_NAMES = ['audi', 'video']
+CHROMECAST_NAMES = ['chromecast1', 'chromecast2', 'chromecast3', 'chromecast4']
 # Insert YouTube channel/user url here.
 CHANNEL_URL = 'https://www.youtube.com/user/CrazyFrogVEVO/videos'
 
