@@ -21,6 +21,10 @@ class MulticastPlaylistError(MulticastError):
     pass
 
 
+class MulticastNoDevicesError(MulticastError):
+    pass
+
+
 class MulticastCastError(MulticastError):
     pass
 
@@ -115,9 +119,15 @@ class Caster:
 def main():
     devices = pychromecast.get_chromecasts()
     if not devices:
+        raise MulticastNoDevicesError
+    try:
+        casts = [Caster(cc.host)
+                 for cc in devices if cc.name in CHROMECAST_NAMES]
+        if not casts:
+            raise ValueError
+    except (pychromecast.error.ChromecastConnectionError, ValueError):
         raise MulticastCastError
-    casts = [Caster(cc.host)
-             for cc in devices if cc.name in CHROMECAST_NAMES]
+    
     playlist = Playlist(CHANNEL_URL)
 
     print('Press Ctrl+C to stop all casting and terminate script.')
@@ -148,5 +158,7 @@ if __name__ == '__main__':
         main()
     except MulticastPlaylistError:
         sys.exit('Invalid YouTube channel/user url.')
+    except MulticastNoDevicesError:
+        sys.exit('No suitable Chromecast devices found.')
     except MulticastCastError:
-        sys.exit('No Chromecast devices found.')
+        sys.exit('Invalid Chromecast list.')
