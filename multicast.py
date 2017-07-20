@@ -91,7 +91,7 @@ class StatusListener:
 
 class Caster:
     def __init__(self, ipadress):
-        self.video_url = None
+        self.video_id = None
         self._cast = pychromecast.Chromecast(ipadress)
         self._cast.wait()
         self._listener = StatusListener(self._cast.app_id)
