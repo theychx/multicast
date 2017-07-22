@@ -7,13 +7,6 @@ import pychromecast
 import youtube_dl
 
 
-# Put the names of your chromcasts into this list.
-#CHROMECAST_NAMES = ['chromecast1', 'chromecast2', 'chromecast3', 'chromecast4']
-CHROMECAST_NAMES = ['audio', 'video']
-# Insert YouTube channel/user url here.
-CHANNEL_URL = 'https://www.youtube.com/user/CrazyFrogVEVO/videos'
-
-
 class MulticastError(Exception):
     pass
 
@@ -120,27 +113,28 @@ class Caster:
         self._cast.quit_app()
 
 
-def main():
+def main(chromecast_names, channel_url):
+    playlist = Playlist(channel_url)
     devices = pychromecast.get_chromecasts()
     if not devices:
         raise MulticastNoDevicesError
-    try:
+    if chromecast_names:
+        device_names = [cc.name for cc in devices]
+        if not set(chromecast_names) <= set(device_names):
+            raise MulticastCastError
         casts = [Caster(cc.host)
-                 for cc in devices if cc.name in CHROMECAST_NAMES]
-        if not casts:
-            raise ValueError
-    except (pychromecast.error.ChromecastConnectionError, ValueError):
-        raise MulticastCastError
+                 for cc in devices if cc.name in chromecast_names]
+    else:
+        casts = [Caster(cc.host) for cc in devices]
 
     for cast in casts:
         cast.stop()
-
-    playlist = Playlist(CHANNEL_URL)
 
     print('Press Ctrl+C to stop all casting and terminate script.')
 
     while True:
         try:
+            print('Getting playlist...')
             playlist.update()
             available_casts = [cc for cc in casts if not cc.is_active]
             playing_videos = [cc.video_id for cc in casts if cc.is_active]
@@ -161,8 +155,10 @@ def main():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        sys.exit('Usage: multicast [<chromecast> [<chromecast> ...]] <channel/user_url>')
     try:
-        main()
+        main(sys.argv[1:-1], sys.argv[-1])
     except MulticastPlaylistError:
         sys.exit('Error: Invalid YouTube channel/user url.')
     except MulticastNoDevicesError:
