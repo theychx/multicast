@@ -8,7 +8,8 @@ import youtube_dl
 
 
 # Put the names of your chromcasts into this list.
-CHROMECAST_NAMES = ['chromecast1', 'chromecast2', 'chromecast3', 'chromecast4']
+#CHROMECAST_NAMES = ['chromecast1', 'chromecast2', 'chromecast3', 'chromecast4']
+CHROMECAST_NAMES = ['audio', 'video']
 # Insert YouTube channel/user url here.
 CHANNEL_URL = 'https://www.youtube.com/user/CrazyFrogVEVO/videos'
 
@@ -33,17 +34,16 @@ class Playlist:
     def __init__(self, channel_url):
         self._ydl = youtube_dl.YoutubeDL({'quiet': True, 'no_warnings': True})
         self._preinfo = None
-        self._info = None
+        self._url_cache = dict()
         self.next_entry = None
         try:
             self._chaninfo = self._ydl.extract_info(channel_url, process=False)
             if not (self._chaninfo['extractor'] == 'youtube:channel'
                     or self._chaninfo['extractor'] == 'youtube:user'):
                 raise ValueError
-            self._playlist_url = self._chaninfo['url']
-            self.update()
         except (youtube_dl.utils.DownloadError, ValueError):
             raise MulticastPlaylistError
+        self._playlist_url = self._chaninfo['url']
 
     def update(self):
         self._preinfo = self._ydl.extract_info(self._playlist_url, process=False)
@@ -51,13 +51,18 @@ class Playlist:
                            for entry in list(self._preinfo['entries']))
 
     def _get_best_format(self, preinfo):
-        info = self._ydl.process_ie_result(preinfo, download=False)
-        format_selector = self._ydl.build_format_selector('best')
         try:
-            best_format = list(format_selector(info))[0]
+            video_url = self._url_cache[preinfo['id']]
         except KeyError:
-            best_format = info
-        return best_format['url']
+            info = self._ydl.process_ie_result(preinfo, download=False)
+            format_selector = self._ydl.build_format_selector('best')
+            try:
+                best_format = list(format_selector(info))[0]
+            except KeyError:
+                best_format = info
+            video_url = self._url_cache[preinfo['id']] = best_format['url']
+
+        return video_url
 
 
 class PlaybackHub:
