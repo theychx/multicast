@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import signal
 import sys
 import threading
 
@@ -113,8 +114,14 @@ class Caster:
         self._cast.quit_app()
 
 
+def signal_handler(*args):
+    raise KeyboardInterrupt
+
+
 def main(chromecast_names, channel_url):
+    signal.signal(signal.SIGINT, signal_handler)
     playlist = Playlist(channel_url)
+
     devices = pychromecast.get_chromecasts()
     if not devices:
         raise MulticastNoDevicesError
