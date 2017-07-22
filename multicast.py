@@ -133,6 +133,9 @@ def main():
     except (pychromecast.error.ChromecastConnectionError, ValueError):
         raise MulticastCastError
 
+    for cast in casts:
+        cast.stop()
+
     playlist = Playlist(CHANNEL_URL)
 
     print('Press Ctrl+C to stop all casting and terminate script.')
