@@ -33,22 +33,21 @@ class MulticastCastError(MulticastError):
 class Playlist:
     def __init__(self, channel_url):
         self._ydl = youtube_dl.YoutubeDL({'quiet': True, 'no_warnings': True})
-        self._preinfo = None
-        self._url_cache = dict()
         self.next_entry = None
+        self._url_cache = dict()
         try:
-            self._chaninfo = self._ydl.extract_info(channel_url, process=False)
-            if not (self._chaninfo['extractor'] == 'youtube:channel'
-                    or self._chaninfo['extractor'] == 'youtube:user'):
+            chaninfo = self._ydl.extract_info(channel_url, process=False)
+            if not (chaninfo['extractor'] == 'youtube:channel'
+                    or chaninfo['extractor'] == 'youtube:user'):
                 raise ValueError
         except (youtube_dl.utils.DownloadError, ValueError):
             raise MulticastPlaylistError
-        self._playlist_url = self._chaninfo['url']
+        self._playlist_url = chaninfo['url']
 
     def update(self):
-        self._preinfo = self._ydl.extract_info(self._playlist_url, process=False)
+        preinfo = self._ydl.extract_info(self._playlist_url, process=False)
         self.next_entry = ((self._get_best_format(entry), entry['id'])
-                           for entry in list(self._preinfo['entries']))
+                           for entry in list(preinfo['entries']))
 
     def _get_best_format(self, preinfo):
         try:
