@@ -24,11 +24,16 @@ class MulticastCastError(MulticastError):
     pass
 
 
+class MulticastTooFewVideosError(MulticastError):
+    pass
+
+
 class Playlist:
     def __init__(self, channel_url):
         self._ydl = youtube_dl.YoutubeDL({'quiet': True, 'no_warnings': True})
-        self.next_entry = None
         self._url_cache = dict()
+        self.number_of_entries = 0
+        self.next_entry = None
         try:
             chaninfo = self._ydl.extract_info(channel_url, process=False)
             if not (chaninfo['extractor'] == 'youtube:channel'
@@ -37,11 +42,6 @@ class Playlist:
         except (youtube_dl.utils.DownloadError, ValueError):
             raise MulticastPlaylistError
         self._playlist_url = chaninfo['url']
-
-    def update(self):
-        preinfo = self._ydl.extract_info(self._playlist_url, process=False)
-        self.next_entry = ((self._get_best_format(entry), entry['id'])
-                           for entry in list(preinfo['entries']))
 
     def _get_best_format(self, preinfo):
         try:
@@ -56,6 +56,13 @@ class Playlist:
             video_url = self._url_cache[preinfo['id']] = best_format['url']
 
         return video_url
+
+    def update(self):
+        preinfo = self._ydl.extract_info(self._playlist_url, process=False)
+        entries = list(preinfo['entries'])
+        self.number_of_entries = len(entries)
+        self.next_entry = ((self._get_best_format(entry), entry['id'])
+                           for entry in entries)
 
 
 class PlaybackHub:
@@ -143,13 +150,15 @@ def main(chromecast_names, channel_url):
         try:
             print('Getting playlist...')
             playlist.update()
-            available_casts = [cc for cc in casts if not cc.is_active]
+            if playlist.number_of_entries < len(casts):
+                raise MulticastTooFewVideosError
             playing_videos = [cc.video_id for cc in casts if cc.is_active]
+            available_casts = [cc for cc in casts if not cc.is_active]
 
             for cast in available_casts:
                 video_url, video_id = next(entry for entry in playlist.next_entry
                                            if entry[1] not in playing_videos)
-                print('Playing %s on "%s"' % (video_id, cast.name))
+                print('Playing %s on "%s"...' % (video_id, cast.name))
                 cast.play(video_url, video_id)
 
             if all(cc.is_active for cc in casts):
@@ -172,3 +181,5 @@ if __name__ == '__main__':
         sys.exit('Error: No Chromecast devices found.')
     except MulticastCastError:
         sys.exit('Error: Invalid Chromecast list.')
+    except MulticastTooFewVideosError:
+        sys.exit('Error: Not enough videos on channel/user page.')
