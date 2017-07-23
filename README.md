@@ -20,3 +20,5 @@ python3 multicast.py [<chromecast> [<chromecast> ...]] <channel/user_url>
 ```
 
 If no list of chromecasts is given, then all chromecasts on the network will be used.
+The script does not allow two chromecasts playing the same video, so the number of
+videos on the channel used must be at least equal to the number of chromecasts used.
